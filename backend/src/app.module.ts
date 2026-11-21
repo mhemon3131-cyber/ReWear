@@ -13,10 +13,10 @@ import { AiModule } from './modules/ai/ai.module';
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     UsersModule,
-    ListingsModule,       // Member 1: Seller Copilot & Multi-Mode Inventory
-    DiscoveryModule,      // Member 2: AI Search & Lookbooks
-    TransactionsModule,   // Member 3 (You): Swaps, Rentals & Checkout
-    SustainabilityModule, // Member 4: Fashion Coach & Impact
+    ListingsModule,       // Seller Copilot & Multi-Mode Inventory
+    DiscoveryModule,      // AI Visual & Semantic Search
+    TransactionsModule,   // Checkout, Swap Matchmaker, Escrow & Rentals
+    SustainabilityModule, // Fashion Coach & Circularity Impact
     AiModule,             // Shared AI Service Integration
   ],
 })

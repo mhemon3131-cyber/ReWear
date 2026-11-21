@@ -27,7 +27,7 @@ export default function CheckoutModal({ isOpen, onClose, item, currentUser, onOr
   const [step, setStep] = useState('details');
 
   // Delivery Form
-  const [fullName, setFullName] = useState(currentUser?.name || 'Mehedi Hasan');
+  const [fullName, setFullName] = useState(currentUser?.name || '');
   const [phone, setPhone] = useState('01711223344');
   const [campus, setCampus] = useState('BRAC University (Kha-224, Merul Badda)');
   const [hallOrBuilding, setHallOrBuilding] = useState('Building 2, Level 5 Cafeteria');
@@ -44,6 +44,10 @@ export default function CheckoutModal({ isOpen, onClose, item, currentUser, onOr
 
   // Confirmed Order State
   const [confirmedOrder, setConfirmedOrder] = useState(null);
+
+  // Cancellation confirmation inline state (replaces browser confirm/alert dialogs)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
 
   // Financial Breakdown
   const numericPrice = parseInt(item.price.replace(/[^\d]/g, '')) || 1850;
@@ -121,17 +125,20 @@ export default function CheckoutModal({ isOpen, onClose, item, currentUser, onOr
     }, 1200);
   };
 
-  // Handle Order Cancellation
+  // Handle Order Cancellation (inline — no browser dialogs)
   const handleCancelOrder = () => {
     if (!confirmedOrder) return;
-    if (confirm(`Are you sure you want to cancel order ${confirmedOrder.orderNumber}? Any charges will be automatically refunded.`)) {
-      setConfirmedOrder(prev => ({
-        ...prev,
-        orderStatus: 'CANCELLED',
-        paymentStatus: 'REFUNDED'
-      }));
-      alert(`Order ${confirmedOrder.orderNumber} has been cancelled successfully.`);
-    }
+    setShowCancelConfirm(true);
+  };
+
+  const confirmCancellation = () => {
+    setConfirmedOrder(prev => ({
+      ...prev,
+      orderStatus: 'CANCELLED',
+      paymentStatus: 'REFUNDED'
+    }));
+    setShowCancelConfirm(false);
+    setCancelSuccess(true);
   };
 
   return (
@@ -553,7 +560,7 @@ export default function CheckoutModal({ isOpen, onClose, item, currentUser, onOr
 
             {/* Action Buttons */}
             <div className="flex flex-wrap justify-between items-center gap-3 pt-2">
-              {confirmedOrder.orderStatus === 'CONFIRMED' && (
+              {confirmedOrder.orderStatus === 'CONFIRMED' && !showCancelConfirm && !cancelSuccess && (
                 <button
                   type="button"
                   onClick={handleCancelOrder}
@@ -561,6 +568,42 @@ export default function CheckoutModal({ isOpen, onClose, item, currentUser, onOr
                 >
                   Cancel Order & Request Refund
                 </button>
+              )}
+
+              {/* Inline Cancellation Confirmation Panel */}
+              {showCancelConfirm && (
+                <div className="w-full bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                    <div className="text-xs text-red-800">
+                      <strong>Confirm Cancellation:</strong> Cancel order <strong>{confirmedOrder.orderNumber}</strong>? Any Stripe charges will be automatically refunded within 3–5 business days.
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowCancelConfirm(false)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#542747] bg-white border border-[#E9C7B7] hover:bg-[#E9C7B7]/30"
+                    >
+                      Keep Order
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmCancellation}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700"
+                    >
+                      Yes, Cancel & Refund
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Cancellation Success Banner */}
+              {cancelSuccess && (
+                <div className="w-full bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-2 text-xs text-emerald-800">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>Order <strong>{confirmedOrder.orderNumber}</strong> cancelled successfully. Refund initiated.</span>
+                </div>
               )}
 
               <div className="flex items-center gap-2 ml-auto">

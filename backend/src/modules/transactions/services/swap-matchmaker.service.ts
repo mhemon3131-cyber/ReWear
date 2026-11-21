@@ -1,11 +1,9 @@
 ﻿import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { SwapOfferEntity, SwapOfferStatus, CompatibilityBreakdown } from '../entities/swap-offer.entity';
 import { CreateSwapOfferDto, CounterSwapOfferDto } from '../dto/swap-offer.dto';
 
 @Injectable()
 export class SwapMatchmakerService {
-  constructor(private readonly configService: ConfigService) {}
 
   // Active in-memory swap offers ledger with Escrow tracking
   private swapOffers: SwapOfferEntity[] = [
@@ -13,7 +11,7 @@ export class SwapMatchmakerService {
       id: 'swp_seed_01',
       offerNumber: 'SWP-2026-3829',
       initiatorId: 'usr_mehedi',
-      initiatorName: 'Mehedi Hasan (Member 3)',
+      initiatorName: 'Mehedi Hasan',
       initiatorItem: {
         id: 'item_raw_denim',
         title: 'Sustainable Raw Denim Cargo Pants',

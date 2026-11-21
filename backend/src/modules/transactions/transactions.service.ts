@@ -4,7 +4,8 @@ import { RentalBookingEntity } from './entities/rental-booking.entity';
 
 @Injectable()
 export class TransactionsService {
-  // Member 3: AI Swap Matchmaker, Unified Checkout, Rentals, Disputes
+  // General service for shared/auxiliary transaction operations
+
   async calculateSwapMatch(offeredId: string, targetId: string) {
     return {
       compatibilityScore: 96,

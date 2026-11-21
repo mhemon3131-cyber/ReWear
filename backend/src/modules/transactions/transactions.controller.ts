@@ -1,6 +1,7 @@
 ﻿import { Controller, Get, Post, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { CheckoutService } from './services/checkout.service';
 import { SwapMatchmakerService } from './services/swap-matchmaker.service';
+import { TransactionsService } from './transactions.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { ProcessStripePaymentDto } from './dto/stripe-payment.dto';
 import { CreateSwapOfferDto, CounterSwapOfferDto } from './dto/swap-offer.dto';
@@ -10,10 +11,11 @@ export class TransactionsController {
   constructor(
     private readonly checkoutService: CheckoutService,
     private readonly swapMatchmakerService: SwapMatchmakerService,
+    private readonly transactionsService: TransactionsService,
   ) {}
 
   // ==========================================
-  // FEATURE 1: UNIFIED CHECKOUT & STRIPE PAYMENT
+  // UNIFIED CHECKOUT & STRIPE PAYMENT
   // ==========================================
 
   @Post('checkout/order')
@@ -44,7 +46,7 @@ export class TransactionsController {
   }
 
   // ==========================================
-  // FEATURE 2: AI SWAP MATCHMAKER & ESCROW
+  // AI SWAP MATCHMAKER & ESCROW
   // ==========================================
 
   @Post('swap-match/calculate')
@@ -86,5 +88,18 @@ export class TransactionsController {
   @HttpCode(HttpStatus.OK)
   async rejectSwapOffer(@Param('id') id: string) {
     return this.swapMatchmakerService.rejectSwapOffer(id);
+  }
+
+  // ==========================================
+  // RENTAL AVAILABILITY CHECK
+  // ==========================================
+
+  @Get('rentals/availability')
+  async checkRentalAvailability(
+    @Query('listingId') listingId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.transactionsService.checkRentalAvailability(listingId, startDate, endDate);
   }
 }
