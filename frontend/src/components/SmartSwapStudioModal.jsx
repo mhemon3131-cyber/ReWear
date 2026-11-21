@@ -85,7 +85,7 @@ export default function SmartSwapStudioModal({ isOpen, onClose, targetItem, curr
     {
       id: 'swp_01',
       offerNumber: 'SWP-2026-3829',
-      initiatorName: 'Mehedi Hasan (Member 3)',
+      initiatorName: 'Mehedi Hasan',
       initiatorItemTitle: "Levi's Raw Denim Cargo Pants",
       receiverName: 'Ayesha Khan (BRACU)',
       receiverItemTitle: 'Vintage Corduroy Oversized Jacket',
@@ -156,7 +156,7 @@ export default function SmartSwapStudioModal({ isOpen, onClose, targetItem, curr
     const newOffer = {
       id: `swp_${Date.now()}`,
       offerNumber: `SWP-2026-${randomNum}`,
-      initiatorName: currentUser?.name || 'Mehedi Hasan (Member 3)',
+      initiatorName: currentUser?.name || 'Mehedi Hasan',
       initiatorItemTitle: selectedClosetItem.title,
       receiverName: marketplaceItem.seller || 'Ayesha K. (BRACU)',
       receiverItemTitle: marketplaceItem.title,
@@ -223,9 +223,9 @@ export default function SmartSwapStudioModal({ isOpen, onClose, targetItem, curr
               <RefreshCw className="w-5 h-5 text-[#E58B51]" />
             </div>
             <div>
-              <div className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 3 • Feature 12 (AI Integrated)</div>
+              <div className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">SmartSwap Intelligent Exchange</div>
               <h2 className="text-xl sm:text-2xl font-black text-[#542747]">
-                AI Swap Matchmaker & Escrow State Machine
+                SmartSwap Matchmaker & Escrow Studio
               </h2>
             </div>
           </div>

@@ -22,7 +22,7 @@ export default function OrderHistoryModal({ isOpen, onClose, orders = [], onCanc
             <Receipt className="w-5 h-5 text-[#E58B51]" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 3 • Transaction Registry</div>
+            <div className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Account Purchases & Invoices</div>
             <h2 className="text-xl sm:text-2xl font-black text-[#542747]">
               Order History & Payment Receipts
             </h2>

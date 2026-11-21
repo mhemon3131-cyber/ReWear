@@ -59,10 +59,10 @@ export default function SellerStudioModal({
   onListingUpdated,
   onListingDeleted,
 }) {
-  // Main Tab: 'create' (Feature 1 Copilot) or 'inventory' (Feature 2 Multi-Mode Inventory)
+  // Main Tab: 'create' (Listing Copilot) or 'inventory' (Inventory Management)
   const [activeTab, setActiveTab] = useState('create');
 
-  // Feature 1: Copilot State
+  // Listing Copilot State
   const [selectedPhoto, setSelectedPhoto] = useState(SAMPLE_GARMENTS[0].image);
   const [customPhotoUrl, setCustomPhotoUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
@@ -82,7 +82,7 @@ export default function SellerStudioModal({
   const [condition, setCondition] = useState('Like New');
   const [hasAuthenticityProof, setHasAuthenticityProof] = useState(true);
 
-  // Feature 2: Multi-Mode Configuration State
+  // Multi-Mode Configuration State
   const [enableBuy, setEnableBuy] = useState(true);
   const [salePrice, setSalePrice] = useState(1850);
 
@@ -209,11 +209,11 @@ export default function SellerStudioModal({
                   Seller Studio & AI Copilot
                 </h2>
                 <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#E58B51] text-white">
-                  Member 1 Modules
+                  Seller Studio
                 </span>
               </div>
               <p className="text-xs text-[#E9C7B7]/80">
-                AI Listing Intelligence (Feature 1) & Multi-Mode Inventory Manager (Feature 2)
+                AI Listing Intelligence & Multi-Mode Inventory Manager
               </p>
             </div>
           </div>
@@ -260,7 +260,7 @@ export default function SellerStudioModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           
           {/* ============================================================ */}
-          {/* TAB 1: AI LISTING COPILOT (FEATURE 1) & MULTI-MODE DRAFTING */}
+          {/* TAB 1: AI LISTING COPILOT & MULTI-MODE DRAFTING */}
           {/* ============================================================ */}
           {activeTab === 'create' && (
             <div className="space-y-6">
@@ -357,7 +357,7 @@ export default function SellerStudioModal({
                 <ShieldAlert className="w-5 h-5 text-[#A94F2C] shrink-0 mt-0.5" />
                 <div className="text-xs space-y-1">
                   <div className="font-bold text-[#542747]">
-                    CSE470 AI Guardrail & Authenticity Disclosure Rule
+                    Quality & Authenticity Disclosure Policy
                   </div>
                   <p className="text-[#38302F]/80 leading-relaxed text-[11px]">
                     The AI Copilot extracts visible aesthetics, silhouette, and tags from images. 
@@ -498,7 +498,7 @@ export default function SellerStudioModal({
                 </div>
               </div>
 
-              {/* Step 4: Multi-Mode Pricing & Inventory Settings (Feature 2) */}
+              {/* Step 4: Multi-Mode Pricing & Inventory Settings */}
               <div className="bg-white p-5 rounded-2xl border border-[#E9C7B7] space-y-4 shadow-2xs">
                 <div className="flex items-center justify-between border-b border-[#E9C7B7]/60 pb-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#542747] uppercase tracking-wider">
@@ -506,7 +506,7 @@ export default function SellerStudioModal({
                     <span>Step 3: Multi-Mode Product Configuration (Sell, Swap, Rent)</span>
                   </div>
                   <span className="text-[11px] text-[#A94F2C] font-semibold">
-                    Feature 2 Inventory Control
+                    Dynamic Availability Control
                   </span>
                 </div>
 
@@ -631,7 +631,7 @@ export default function SellerStudioModal({
                 </div>
               </div>
 
-              {/* ACTION BUTTONS: DRAFT vs PUBLISH (Feature 2 Requirement) */}
+              {/* ACTION BUTTONS: DRAFT vs PUBLISH */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                 <div className="text-xs text-[#38302F]/70">
                   <span>Status on save: </span>
@@ -662,7 +662,7 @@ export default function SellerStudioModal({
           )}
 
           {/* ============================================================ */}
-          {/* TAB 2: MULTI-MODE INVENTORY MANAGEMENT (FEATURE 2) */}
+          {/* TAB 2: MULTI-MODE INVENTORY MANAGEMENT */}
           {/* ============================================================ */}
           {activeTab === 'inventory' && (
             <div className="space-y-6">
@@ -675,7 +675,7 @@ export default function SellerStudioModal({
                       Seller Inventory & Transaction States
                     </h3>
                     <p className="text-xs text-[#38302F]/70">
-                      Feature 2 tracks <strong>Draft</strong>, <strong>Active</strong>, <strong>Reserved</strong>, and <strong>Sold/Rented</strong> items to prevent unavailable garments from being transacted.
+                      ReWear tracks <strong>Draft</strong>, <strong>Active</strong>, <strong>Reserved</strong>, and <strong>Sold/Rented</strong> items to ensure accurate availability across all modes.
                     </p>
                   </div>
 

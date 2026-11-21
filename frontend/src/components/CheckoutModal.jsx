@@ -152,7 +152,7 @@ export default function CheckoutModal({ isOpen, onClose, item, currentUser, onOr
             <ShoppingBag className="w-5 h-5 text-[#E58B51]" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 3 • Feature 11</div>
+            <div className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Secure Campus Checkout</div>
             <h2 className="text-xl sm:text-2xl font-black text-[#542747]">
               Unified Checkout & Stripe Payment
             </h2>
