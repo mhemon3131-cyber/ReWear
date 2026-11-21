@@ -29,11 +29,12 @@ import {
   SlidersHorizontal,
   Award,
   Bell,
+  Lock,
   Receipt,
-  CreditCard,
-  Lock
+  CreditCard
 } from 'lucide-react';
 
+import SellerStudioModal from './components/SellerStudioModal';
 import CheckoutModal from './components/CheckoutModal';
 import SmartSwapStudioModal from './components/SmartSwapStudioModal';
 import OrderHistoryModal from './components/OrderHistoryModal';
@@ -58,7 +59,10 @@ export default function App() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
-  // Member 3 Feature Modals State
+  // Member 1 Feature State: Seller Studio & AI Copilot
+  const [isSellerStudioOpen, setIsSellerStudioOpen] = useState(false);
+
+  // Member 3 Feature Modals State: Unified Checkout & AI Swap Matchmaker
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutItem, setCheckoutItem] = useState(null);
   const [isSwapStudioOpen, setIsSwapStudioOpen] = useState(false);
@@ -99,8 +103,8 @@ export default function App() {
   // Active AI Tab Teaser
   const [activeAiTab, setActiveAiTab] = useState('swap'); // 'copilot', 'search', 'swap', 'coach'
 
-  // Sample Mock Listings
-  const listings = [
+  // Sample Mock Listings with Multi-Mode & Status States
+  const initialListings = [
     {
       id: 1,
       title: "Vintage Corduroy Oversized Jacket",
@@ -109,15 +113,19 @@ export default function App() {
       category: "Outerwear",
       originalPrice: "৳4,200",
       price: "৳1,850",
+      salePrice: 1850,
       estimatedValueBDT: 1850,
       swapCredits: 45,
       rentPrice: "৳250/day",
+      rentalPricePerDay: 250,
       modes: ['buy', 'swap', 'rent'],
       condition: "Like New",
+      status: 'ACTIVE',
       waterSaved: 2800,
       carbonSaved: 3.4,
       image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=600",
-      seller: "Ayesha K. (BRACU)",
+      seller: "Zerin Tasnim (Seller)",
+      sellerId: "usr_02",
       verified: true,
       hasDefectDisclosure: true,
       defectNote: "No stains or tears; minor wear on lower inner cuff.",
@@ -132,15 +140,18 @@ export default function App() {
       category: "Tops & Vests",
       originalPrice: "৳3,500",
       price: "৳1,600",
+      salePrice: 1600,
       estimatedValueBDT: 1600,
       swapCredits: 40,
       rentPrice: null,
       modes: ['buy', 'swap'],
       condition: "Brand New w/ Tags",
+      status: 'ACTIVE',
       waterSaved: 2200,
       carbonSaved: 2.8,
       image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=600",
       seller: "Tanvir H. (DU)",
+      sellerId: "usr_03",
       verified: true,
       hasDefectDisclosure: true,
       defectNote: "Flawless, unused gift with original university artisan tag.",
@@ -155,15 +166,19 @@ export default function App() {
       category: "Pants & Jeans",
       originalPrice: "৳4,800",
       price: "৳2,100",
+      salePrice: 2100,
       estimatedValueBDT: 2100,
       swapCredits: 50,
       rentPrice: "৳300/day",
+      rentalPricePerDay: 300,
       modes: ['buy', 'swap', 'rent'],
       condition: "Good",
+      status: 'RESERVED', // Escrow lock test
       waterSaved: 3100,
       carbonSaved: 4.1,
       image: "https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&q=80&w=600",
-      seller: "Samiha R. (NSU)",
+      seller: "Zerin Tasnim (Seller)",
+      sellerId: "usr_02",
       verified: true,
       hasDefectDisclosure: true,
       defectNote: "Slight natural fade on left knee; all seams reinforced.",
@@ -178,15 +193,19 @@ export default function App() {
       category: "Knitwear",
       originalPrice: "৳2,900",
       price: "৳1,200",
+      salePrice: 1200,
       estimatedValueBDT: 1200,
       swapCredits: 30,
       rentPrice: "৳180/day",
+      rentalPricePerDay: 180,
       modes: ['buy', 'swap', 'rent'],
       condition: "Like New",
+      status: 'ACTIVE',
       waterSaved: 1900,
       carbonSaved: 2.1,
       image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=600",
       seller: "Rahim M. (IUB)",
+      sellerId: "usr_04",
       verified: false,
       hasDefectDisclosure: true,
       defectNote: "Dry-cleaned twice; zero pilling or loose threads.",
@@ -195,10 +214,52 @@ export default function App() {
     }
   ];
 
+  const [listings, setListings] = useState(initialListings);
+
+  // Member 1: Handlers for Inventory & AI Copilot creations
+  const handleListingCreated = (newListing) => {
+    const formatted = {
+      id: newListing.id || Date.now(),
+      title: newListing.title,
+      brand: newListing.brand,
+      size: newListing.size,
+      category: newListing.category || "Outerwear",
+      originalPrice: newListing.originalPrice ? `৳${newListing.originalPrice}` : '৳3,500',
+      price: newListing.salePrice ? `৳${newListing.salePrice}` : (newListing.price || '৳1,800'),
+      salePrice: newListing.salePrice || 1800,
+      estimatedValueBDT: newListing.salePrice || 1800,
+      swapCredits: newListing.swapCredits || 40,
+      rentPrice: newListing.rentalPricePerDay ? `৳${newListing.rentalPricePerDay}/day` : null,
+      rentalPricePerDay: newListing.rentalPricePerDay || null,
+      modes: newListing.modes || ['buy', 'swap'],
+      condition: newListing.condition || 'Like New',
+      status: newListing.status || 'ACTIVE',
+      waterSaved: 2500,
+      carbonSaved: 3.0,
+      image: newListing.image || (newListing.images && newListing.images[0]) || "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=600",
+      seller: currentUser ? currentUser.name : "Student Seller",
+      sellerId: "usr_me",
+      verified: true,
+      hasDefectDisclosure: !!newListing.defectDisclosure,
+      defectNote: newListing.defectDisclosure || "Verified clean by seller.",
+      likes: 0,
+      isWishlisted: false,
+    };
+    setListings(prev => [formatted, ...prev]);
+  };
+
+  const handleListingUpdated = (updatedListing) => {
+    setListings(prev => prev.map(item => item.id === updatedListing.id ? { ...item, ...updatedListing } : item));
+  };
+
+  const handleListingDeleted = (listingId) => {
+    setListings(prev => prev.filter(item => item.id !== listingId));
+  };
+
   // Filter listings based on active mode
   const filteredListings = listings.filter(item => {
     if (activeMode === 'all') return true;
-    return item.modes.includes(activeMode);
+    return item.modes && item.modes.includes(activeMode);
   });
 
   // Handle Mock Login
@@ -370,12 +431,21 @@ export default function App() {
               </div>
             )}
 
+            {/* List an item CTA (Member 1 Studio) */}
+            <button
+              onClick={() => setIsSellerStudioOpen(true)}
+              className="hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[#A94F2C] hover:bg-[#8c3e20] text-white font-semibold text-sm transition-all shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-[#FFF5EB]" />
+              <span>List Clothing</span>
+            </button>
+
             {/* User Session / Sign In Button */}
             {currentUser ? (
               <div className="flex items-center gap-2">
                 <div className="text-right hidden sm:block">
                   <div className="text-xs font-bold text-[#542747]">{currentUser.name}</div>
-                  <div className="text-[10px] text-[#A94F2C] font-semibold">Member 3 (Active)</div>
+                  <div className="text-[10px] text-[#A94F2C] font-semibold">Active Member</div>
                 </div>
                 <button
                   onClick={() => setCurrentUser(null)}
@@ -595,7 +665,7 @@ export default function App() {
               4 Specialized AI Engines For 4 Team Members
             </h2>
             <p className="text-xs sm:text-sm text-[#38302F]/70 mt-1">
-              Each member owns 5 core features and 1 integrated AI system. Member 3 features are now fully functional.
+              Each member owns 5 core features and 1 integrated AI system. Member 1 & Member 3 features are now fully functional.
             </p>
           </div>
 
@@ -609,7 +679,7 @@ export default function App() {
                   : 'border-[#E9C7B7] bg-[#FFF5EB] hover:bg-[#E9C7B7]/30 text-[#38302F]'
               }`}
             >
-              <div className="text-[10px] font-bold uppercase opacity-80">Member 1</div>
+              <div className="text-[10px] font-bold uppercase opacity-80">Member 1 (Live)</div>
               <div className="font-bold text-sm flex items-center gap-1.5 mt-0.5">
                 <Camera className="w-4 h-4 text-[#E58B51]" />
                 <span>AI Listing Copilot</span>
@@ -664,6 +734,56 @@ export default function App() {
 
           {/* AI Tab Interactive Content Panel */}
           <div className="bg-[#FFF5EB] rounded-2xl p-6 border border-[#E9C7B7] shadow-inner">
+            {activeAiTab === 'copilot' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div className="space-y-3">
+                  <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 1 • Seller Intelligence</span>
+                  <h3 className="text-xl font-bold text-[#542747]">Snap & Sell AI Copilot</h3>
+                  <p className="text-xs sm:text-sm text-[#38302F]/80">
+                    Sellers simply snap a photograph. The AI automatically classifies the garment type, detects visible fabric patterns, and drafts listings ready for review.
+                  </p>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#542747]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Auto-generates tags: #Vintage #Corduroy #Unisex</span>
+                  </div>
+                  <button
+                    onClick={() => setIsSellerStudioOpen(true)}
+                    className="mt-2 px-4 py-2.5 bg-[#A94F2C] hover:bg-[#8c3e20] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#FFF5EB]" />
+                    <span>Open AI Listing Studio & Inventory Manager</span>
+                  </button>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
+                  <div className="text-xs font-bold text-[#542747] mb-2">Simulated Copilot Output:</div>
+                  <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
+                    <div><strong>Title:</strong> Vintage Oversized Corduroy Jacket</div>
+                    <div><strong>Category:</strong> Outerwear &gt; Jackets</div>
+                    <div><strong>Resale Range:</strong> ৳1,600 – ৳2,000</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeAiTab === 'search' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div className="space-y-3">
+                  <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 2 • Buyer Discovery</span>
+                  <h3 className="text-xl font-bold text-[#542747]">Semantic & Natural Language Style Finder</h3>
+                  <p className="text-xs sm:text-sm text-[#38302F]/80">
+                    Buyers query in plain English. Vector search matches style intent and applies budget filters.
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
+                  <div className="text-xs font-bold text-[#542747] mb-2">Natural Language Query Processing:</div>
+                  <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
+                    <div><strong>Input:</strong> "black oversized vintage jacket under 2k"</div>
+                    <div><strong>Extracted:</strong> [Color: Black, Fit: Oversized, MaxPrice: 2000]</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeAiTab === 'swap' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div className="space-y-3">
@@ -693,45 +813,6 @@ export default function App() {
                     <div><strong>States:</strong> PROPOSED &gt; ACCEPTED &gt; ESCROW_LOCKED &gt; COMPLETED</div>
                     <div><strong>Stripe Gateway:</strong> Card Tokenization & Payment Intent Verified</div>
                     <div><strong>Cancellation:</strong> 2-Hour Grace Period & Instant Refund Flow</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeAiTab === 'copilot' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                <div className="space-y-3">
-                  <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 1 • Seller Intelligence</span>
-                  <h3 className="text-xl font-bold text-[#542747]">Snap & Sell AI Copilot</h3>
-                  <p className="text-xs sm:text-sm text-[#38302F]/80">
-                    Sellers simply snap a photograph. The AI automatically classifies the garment type, detects visible fabric patterns, and drafts listings ready for review.
-                  </p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
-                  <div className="text-xs font-bold text-[#542747] mb-2">Simulated Copilot Output:</div>
-                  <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
-                    <div><strong>Title:</strong> Vintage Oversized Corduroy Jacket</div>
-                    <div><strong>Category:</strong> Outerwear &gt; Jackets</div>
-                    <div><strong>Resale Range:</strong> ৳1,600 – ৳2,000</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeAiTab === 'search' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                <div className="space-y-3">
-                  <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 2 • Buyer Discovery</span>
-                  <h3 className="text-xl font-bold text-[#542747]">Semantic & Natural Language Style Finder</h3>
-                  <p className="text-xs sm:text-sm text-[#38302F]/80">
-                    Buyers query in plain English. Vector search matches style intent and applies budget filters.
-                  </p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
-                  <div className="text-xs font-bold text-[#542747] mb-2">Natural Language Query Processing:</div>
-                  <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
-                    <div><strong>Input:</strong> "black oversized vintage jacket under 2k"</div>
-                    <div><strong>Extracted:</strong> [Color: Black, Fit: Oversized, MaxPrice: 2000]</div>
                   </div>
                 </div>
               </div>
@@ -791,11 +872,21 @@ export default function App() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
-                {/* Condition Badge */}
-                <div className="absolute top-3 left-3">
+                {/* Condition & Status Badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
                   <span className="bg-[#542747] text-white text-[11px] font-bold px-2.5 py-1 rounded-md shadow-xs">
                     {item.condition}
                   </span>
+                  {item.status === 'RESERVED' && (
+                    <span className="bg-amber-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                      <Lock className="w-3 h-3" /> In Escrow
+                    </span>
+                  )}
+                  {(item.status === 'SOLD' || item.status === 'RENTED') && (
+                    <span className="bg-purple-800 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs">
+                      {item.status}
+                    </span>
+                  )}
                 </div>
 
                 {/* Wishlist Heart Button */}
@@ -857,26 +948,43 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Member 3 Actions: Unified Checkout (Stripe) & AI SmartSwap */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
+                {/* Card Action - Prevents transacting unavailable items, otherwise provides Buy with Stripe & AI SmartSwap */}
+                {item.status === 'RESERVED' ? (
                   <button
-                    onClick={() => handleOpenCheckout(item)}
-                    className="py-2 px-2 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-lg font-bold text-[11px] transition-colors flex items-center justify-center gap-1 shadow-2xs"
-                    title="Pay with Stripe Card or Swap Credits"
+                    disabled
+                    className="w-full py-2 bg-amber-100 text-amber-900 border border-amber-300 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90"
                   >
-                    <CreditCard className="w-3 h-3 text-[#E58B51]" />
-                    <span>Buy (Stripe)</span>
+                    <Lock className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Locked in Escrow (Unavailable)</span>
                   </button>
+                ) : (item.status === 'SOLD' || item.status === 'RENTED') ? (
+                  <button
+                    disabled
+                    className="w-full py-2 bg-gray-200 text-gray-600 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed"
+                  >
+                    <span>{item.status === 'SOLD' ? 'Sold Out' : 'Currently Rented Out'}</span>
+                  </button>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => handleOpenCheckout(item)}
+                      className="py-2 px-2 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-lg font-bold text-[11px] transition-colors flex items-center justify-center gap-1 shadow-2xs"
+                      title="Pay with Stripe Card or Swap Credits"
+                    >
+                      <CreditCard className="w-3 h-3 text-[#E58B51]" />
+                      <span>Buy (Stripe)</span>
+                    </button>
 
-                  <button
-                    onClick={() => handleOpenSwapStudio(item)}
-                    className="py-2 px-2 bg-white hover:bg-[#E9C7B7]/40 text-[#542747] border border-[#E9C7B7] rounded-lg font-bold text-[11px] transition-colors flex items-center justify-center gap-1"
-                    title="Trade with AI Compatibility Matchmaker"
-                  >
-                    <RefreshCw className="w-3 h-3 text-[#A94F2C]" />
-                    <span>AI SmartSwap</span>
-                  </button>
-                </div>
+                    <button
+                      onClick={() => handleOpenSwapStudio(item)}
+                      className="py-2 px-2 bg-white hover:bg-[#E9C7B7]/40 text-[#542747] border border-[#E9C7B7] rounded-lg font-bold text-[11px] transition-colors flex items-center justify-center gap-1"
+                      title="Trade with AI Compatibility Matchmaker"
+                    >
+                      <RefreshCw className="w-3 h-3 text-[#A94F2C]" />
+                      <span>AI SmartSwap</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -981,17 +1089,17 @@ export default function App() {
 
             {/* Member Roles & Allocation */}
             <div className="space-y-2">
-              <div className="text-xs font-bold text-[#E58B51] uppercase tracking-wider">Member 1 & 2</div>
+              <div className="text-xs font-bold text-[#E58B51] uppercase tracking-wider">Member 1 (Live) & 2</div>
               <ul className="text-xs text-[#E9C7B7]/80 space-y-1">
-                <li>• Member 1: Seller Copilot & Multi-Mode Inventory</li>
-                <li>• Member 1: Condition Transparency & Resale Advisor</li>
+                <li>• <strong>Feature 1:</strong> AI Listing Copilot (LIVE)</li>
+                <li>• <strong>Feature 2:</strong> Multi-Mode Product & Inventory (LIVE)</li>
                 <li>• Member 2: Visual & Semantic Search Engine</li>
                 <li>• Member 2: Personalized Feed & Outfit Lookbook</li>
               </ul>
             </div>
 
             <div className="space-y-2">
-              <div className="text-xs font-bold text-[#E58B51] uppercase tracking-wider">Member 3 (You) • READY</div>
+              <div className="text-xs font-bold text-[#E58B51] uppercase tracking-wider">Member 3 (You) • LIVE & READY</div>
               <ul className="text-xs text-[#E9C7B7]/80 space-y-1">
                 <li>• <strong>Feature 11:</strong> Unified Checkout & Stripe Payments (LIVE)</li>
                 <li>• <strong>Feature 12:</strong> AI Swap Matchmaker & Escrow (LIVE)</li>
@@ -1018,7 +1126,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* 8. FEATURE 11: CHECKOUT & STRIPE PAYMENT MODAL */}
+      {/* 8. FEATURE 11: CHECKOUT & STRIPE PAYMENT MODAL (MEMBER 3) */}
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -1027,7 +1135,7 @@ export default function App() {
         onOrderSuccess={handleOrderSuccess}
       />
 
-      {/* 9. FEATURE 12: AI SMARTSWAP STUDIO & ESCROW MODAL */}
+      {/* 9. FEATURE 12: AI SMARTSWAP STUDIO & ESCROW MODAL (MEMBER 3) */}
       <SmartSwapStudioModal
         isOpen={isSwapStudioOpen}
         onClose={() => setIsSwapStudioOpen(false)}
@@ -1035,7 +1143,7 @@ export default function App() {
         currentUser={currentUser}
       />
 
-      {/* 10. ORDER HISTORY & STRIPE RECEIPTS MODAL */}
+      {/* 10. ORDER HISTORY & STRIPE RECEIPTS MODAL (MEMBER 3) */}
       <OrderHistoryModal
         isOpen={isOrderHistoryOpen}
         onClose={() => setIsOrderHistoryOpen(false)}
@@ -1043,7 +1151,18 @@ export default function App() {
         onCancelOrder={handleCancelOrder}
       />
 
-      {/* 11. AUTHENTICATION & LOGIN MODAL */}
+      {/* 11. MEMBER 1: SELLER STUDIO & AI COPILOT / INVENTORY MODAL */}
+      <SellerStudioModal
+        isOpen={isSellerStudioOpen}
+        onClose={() => setIsSellerStudioOpen(false)}
+        currentUser={currentUser}
+        listings={listings}
+        onListingCreated={handleListingCreated}
+        onListingUpdated={handleListingUpdated}
+        onListingDeleted={handleListingDeleted}
+      />
+
+      {/* 12. AUTHENTICATION & LOGIN MODAL */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
           <div className="bg-[#FFF5EB] w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border-2 border-[#E9C7B7] relative">
@@ -1088,7 +1207,7 @@ export default function App() {
                   onClick={() => handleDemoLogin('seller', 'seller.wardrobe@du.ac.bd')}
                   className="py-1.5 px-2 bg-[#FFF5EB] hover:bg-[#E9C7B7]/50 border border-[#E9C7B7] rounded-lg text-xs font-bold text-[#A94F2C] text-left transition-colors"
                 >
-                  🛍️ Active Seller
+                  🛍️ Zerin (Seller)
                 </button>
               </div>
             </div>
