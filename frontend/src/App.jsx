@@ -28,8 +28,10 @@ import {
   LogOut,
   SlidersHorizontal,
   Award,
-  Bell
+  Bell,
+  Lock,
 } from 'lucide-react';
+import SellerStudioModal from './components/SellerStudioModal';
 
 export default function App() {
   // Navigation / Filter State
@@ -51,8 +53,11 @@ export default function App() {
   // Active AI Tab Teaser
   const [activeAiTab, setActiveAiTab] = useState('swap'); // 'copilot', 'search', 'swap', 'coach'
 
-  // Sample Mock Listings
-  const listings = [
+  // Seller Studio Modal State (Member 1)
+  const [isSellerStudioOpen, setIsSellerStudioOpen] = useState(false);
+
+  // Sample Mock Listings with Multi-Mode & Status States
+  const initialListings = [
     {
       id: 1,
       title: "Vintage Corduroy Oversized Jacket",
@@ -60,14 +65,18 @@ export default function App() {
       size: "M",
       originalPrice: "৳4,200",
       price: "৳1,850",
+      salePrice: 1850,
       swapCredits: 45,
       rentPrice: "৳250/day",
+      rentalPricePerDay: 250,
       modes: ['buy', 'swap', 'rent'],
       condition: "Like New",
+      status: 'ACTIVE',
       waterSaved: 2800,
       carbonSaved: 3.4,
       image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=600",
-      seller: "Ayesha K. (BRACU)",
+      seller: "Zerin Tasnim (Seller)",
+      sellerId: "usr_02",
       verified: true,
       hasDefectDisclosure: true,
       defectNote: "No stains or tears; minor wear on lower inner cuff.",
@@ -81,14 +90,17 @@ export default function App() {
       size: "S",
       originalPrice: "৳3,500",
       price: "৳1,600",
+      salePrice: 1600,
       swapCredits: 40,
       rentPrice: null,
       modes: ['buy', 'swap'],
       condition: "Brand New w/ Tags",
+      status: 'ACTIVE',
       waterSaved: 2200,
       carbonSaved: 2.8,
       image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=600",
       seller: "Tanvir H. (DU)",
+      sellerId: "usr_03",
       verified: true,
       hasDefectDisclosure: true,
       defectNote: "Flawless, unused gift with original university artisan tag.",
@@ -102,14 +114,18 @@ export default function App() {
       size: "32",
       originalPrice: "৳4,800",
       price: "৳2,100",
+      salePrice: 2100,
       swapCredits: 50,
       rentPrice: "৳300/day",
+      rentalPricePerDay: 300,
       modes: ['buy', 'swap', 'rent'],
       condition: "Good",
+      status: 'RESERVED', // Escrow lock test
       waterSaved: 3100,
       carbonSaved: 4.1,
       image: "https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&q=80&w=600",
-      seller: "Samiha R. (NSU)",
+      seller: "Zerin Tasnim (Seller)",
+      sellerId: "usr_02",
       verified: true,
       hasDefectDisclosure: true,
       defectNote: "Slight natural fade on left knee; all seams reinforced.",
@@ -123,14 +139,18 @@ export default function App() {
       size: "L",
       originalPrice: "৳2,900",
       price: "৳1,200",
+      salePrice: 1200,
       swapCredits: 30,
       rentPrice: "৳180/day",
+      rentalPricePerDay: 180,
       modes: ['buy', 'swap', 'rent'],
       condition: "Like New",
+      status: 'ACTIVE',
       waterSaved: 1900,
       carbonSaved: 2.1,
       image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=600",
       seller: "Rahim M. (IUB)",
+      sellerId: "usr_04",
       verified: false,
       hasDefectDisclosure: true,
       defectNote: "Dry-cleaned twice; zero pilling or loose threads.",
@@ -139,8 +159,49 @@ export default function App() {
     }
   ];
 
-  // Filter listings based on active mode
+  const [listings, setListings] = useState(initialListings);
+
+  // Member 1: Handlers for Inventory & AI Copilot creations
+  const handleListingCreated = (newListing) => {
+    const formatted = {
+      id: newListing.id || Date.now(),
+      title: newListing.title,
+      brand: newListing.brand,
+      size: newListing.size,
+      originalPrice: newListing.originalPrice ? `৳${newListing.originalPrice}` : '৳3,500',
+      price: newListing.salePrice ? `৳${newListing.salePrice}` : (newListing.price || '৳1,800'),
+      salePrice: newListing.salePrice || 1800,
+      swapCredits: newListing.swapCredits || 40,
+      rentPrice: newListing.rentalPricePerDay ? `৳${newListing.rentalPricePerDay}/day` : null,
+      rentalPricePerDay: newListing.rentalPricePerDay,
+      modes: newListing.modes || ['buy', 'swap'],
+      condition: newListing.condition || 'Like New',
+      status: newListing.status || 'ACTIVE',
+      waterSaved: newListing.waterSavingsLiters || 2400,
+      carbonSaved: newListing.co2AvoidedKg || 3.0,
+      image: newListing.images?.[0] || newListing.image || "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=600",
+      seller: newListing.sellerName || (currentUser ? currentUser.name : "Zerin Tasnim (Seller)"),
+      sellerId: newListing.sellerId || "usr_02",
+      verified: true,
+      hasDefectDisclosure: true,
+      defectNote: newListing.defectDisclosure || "Inspected and verified condition.",
+      likes: 1,
+      isWishlisted: false,
+    };
+    setListings(prev => [formatted, ...prev]);
+  };
+
+  const handleListingUpdated = (id, newStatus) => {
+    setListings(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
+  };
+
+  const handleListingDeleted = (id) => {
+    setListings(prev => prev.filter(item => item.id !== id));
+  };
+
+  // Filter listings based on active mode & hide unreleased DRAFTs from public view
   const filteredListings = listings.filter(item => {
+    if (item.status === 'DRAFT') return false; // Private to seller inventory
     if (activeMode === 'all') return true;
     return item.modes.includes(activeMode);
   });
@@ -276,12 +337,9 @@ export default function App() {
               </button>
             )}
 
-            {/* List an item CTA */}
+            {/* List an item CTA (Member 1 Studio) */}
             <button
-              onClick={() => {
-                if (!currentUser) setIsAuthOpen(true);
-                else alert("Opening Member 1's AI Listing Copilot workflow!");
-              }}
+              onClick={() => setIsSellerStudioOpen(true)}
               className="hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[#A94F2C] hover:bg-[#8c3e20] text-white font-semibold text-sm transition-all shadow-sm"
             >
               <Sparkles className="w-4 h-4 text-[#FFF5EB]" />
@@ -574,6 +632,13 @@ export default function App() {
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>Auto-generates tags: #Vintage #Corduroy #Unisex</span>
                   </div>
+                  <button
+                    onClick={() => setIsSellerStudioOpen(true)}
+                    className="mt-2 px-4 py-2.5 bg-[#A94F2C] hover:bg-[#8c3e20] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#FFF5EB]" />
+                    <span>Open AI Listing Studio & Inventory Manager</span>
+                  </button>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
                   <div className="text-xs font-bold text-[#542747] mb-2">Simulated Copilot Output:</div>
@@ -694,11 +759,21 @@ export default function App() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
-                {/* Condition Badge */}
-                <div className="absolute top-3 left-3">
+                {/* Condition & Status Badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
                   <span className="bg-[#542747] text-white text-[11px] font-bold px-2.5 py-1 rounded-md shadow-xs">
                     {item.condition}
                   </span>
+                  {item.status === 'RESERVED' && (
+                    <span className="bg-amber-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                      <Lock className="w-3 h-3" /> In Escrow
+                    </span>
+                  )}
+                  {(item.status === 'SOLD' || item.status === 'RENTED') && (
+                    <span className="bg-purple-800 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs">
+                      {item.status}
+                    </span>
+                  )}
                 </div>
 
                 {/* Wishlist Heart Button */}
@@ -760,16 +835,33 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Card Action */}
-                <button
-                  onClick={() => {
-                    if (!currentUser) setIsAuthOpen(true);
-                    else alert(`Proceeding to checkout/swap for: ${item.title}`);
-                  }}
-                  className="w-full py-2 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
-                >
-                  <span>Select / Propose Swap</span>
-                </button>
+                {/* Card Action - Prevents transacting unavailable items (Feature 2) */}
+                {item.status === 'RESERVED' ? (
+                  <button
+                    disabled
+                    className="w-full py-2 bg-amber-100 text-amber-900 border border-amber-300 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Locked in Escrow (Unavailable)</span>
+                  </button>
+                ) : (item.status === 'SOLD' || item.status === 'RENTED') ? (
+                  <button
+                    disabled
+                    className="w-full py-2 bg-gray-200 text-gray-600 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed"
+                  >
+                    <span>{item.status === 'SOLD' ? 'Sold Out' : 'Currently Rented Out'}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (!currentUser) setIsAuthOpen(true);
+                      else alert(`Proceeding to checkout/swap for: ${item.title}`);
+                    }}
+                    className="w-full py-2 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <span>Select / Propose Swap</span>
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -1064,6 +1156,17 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* 9. MEMBER 1: SELLER STUDIO & AI COPILOT / INVENTORY MODAL */}
+      <SellerStudioModal
+        isOpen={isSellerStudioOpen}
+        onClose={() => setIsSellerStudioOpen(false)}
+        currentUser={currentUser}
+        listings={listings}
+        onListingCreated={handleListingCreated}
+        onListingUpdated={handleListingUpdated}
+        onListingDeleted={handleListingDeleted}
+      />
 
     </div>
   );
