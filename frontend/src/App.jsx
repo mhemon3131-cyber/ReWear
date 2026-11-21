@@ -28,8 +28,15 @@ import {
   LogOut,
   SlidersHorizontal,
   Award,
-  Bell
+  Bell,
+  Receipt,
+  CreditCard,
+  Lock
 } from 'lucide-react';
+
+import CheckoutModal from './components/CheckoutModal';
+import SmartSwapStudioModal from './components/SmartSwapStudioModal';
+import OrderHistoryModal from './components/OrderHistoryModal';
 
 export default function App() {
   // Navigation / Filter State
@@ -41,9 +48,50 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
   const [userRole, setUserRole] = useState('student'); // 'student', 'seller', 'swap_enthusiast'
-  const [currentUser, setCurrentUser] = useState(null); // Simulated logged-in user
+  const [currentUser, setCurrentUser] = useState({
+    name: 'Mehedi Hasan',
+    email: 'mhemon3131@gmail.com',
+    role: 'student',
+    swapCredits: 120,
+    universityBadge: 'Verified Student (.edu)',
+  });
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+
+  // Member 3 Feature Modals State
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutItem, setCheckoutItem] = useState(null);
+  const [isSwapStudioOpen, setIsSwapStudioOpen] = useState(false);
+  const [swapTargetItem, setSwapTargetItem] = useState(null);
+  const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false);
+
+  // Persistent Orders List (Member 3 - Unified Checkout)
+  const [ordersList, setOrdersList] = useState([
+    {
+      id: 'ord_sample_01',
+      orderNumber: 'ORD-2026-9481',
+      itemTitle: 'Vintage Corduroy Oversized Jacket',
+      itemBrand: 'Zara Eco-Line',
+      itemPrice: 1850,
+      deliveryFee: 0,
+      discount: 50,
+      totalAmount: 1800,
+      deliveryAddress: {
+        fullName: 'Mehedi Hasan (Member 3)',
+        phone: '01711223344',
+        campus: 'BRAC University',
+        hallOrBuilding: 'Building 2, Level 5',
+      },
+      deliveryOption: 'CAMPUS_PICKUP',
+      paymentMethod: 'STRIPE_CARD',
+      cardLast4: '4242',
+      paymentStatus: 'PAID',
+      orderStatus: 'CONFIRMED',
+      stripePaymentIntentId: 'pi_3MtwxX2eZvKYlo2C01234567',
+      cancellationAllowedUntil: new Date(Date.now() + 1000 * 60 * 60 * 2),
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
+    },
+  ]);
 
   // Interactive Impact Calculator State
   const [itemsReused, setItemsReused] = useState(3);
@@ -58,8 +106,10 @@ export default function App() {
       title: "Vintage Corduroy Oversized Jacket",
       brand: "Zara Eco-Line",
       size: "M",
+      category: "Outerwear",
       originalPrice: "৳4,200",
       price: "৳1,850",
+      estimatedValueBDT: 1850,
       swapCredits: 45,
       rentPrice: "৳250/day",
       modes: ['buy', 'swap', 'rent'],
@@ -79,8 +129,10 @@ export default function App() {
       title: "Hand-Embroidered Jamdani Fusion Vest",
       brand: "Aarong Heritage",
       size: "S",
+      category: "Tops & Vests",
       originalPrice: "৳3,500",
       price: "৳1,600",
+      estimatedValueBDT: 1600,
       swapCredits: 40,
       rentPrice: null,
       modes: ['buy', 'swap'],
@@ -100,8 +152,10 @@ export default function App() {
       title: "Sustainable Raw Denim Cargo Pants",
       brand: "Levi's Circular",
       size: "32",
+      category: "Pants & Jeans",
       originalPrice: "৳4,800",
       price: "৳2,100",
+      estimatedValueBDT: 2100,
       swapCredits: 50,
       rentPrice: "৳300/day",
       modes: ['buy', 'swap', 'rent'],
@@ -121,8 +175,10 @@ export default function App() {
       title: "Knitted Autumn Turtleneck Sweater",
       brand: "H&M Conscious",
       size: "L",
+      category: "Knitwear",
       originalPrice: "৳2,900",
       price: "৳1,200",
+      estimatedValueBDT: 1200,
       swapCredits: 30,
       rentPrice: "৳180/day",
       modes: ['buy', 'swap', 'rent'],
@@ -149,8 +205,8 @@ export default function App() {
   const handleAuthSubmit = (e) => {
     e.preventDefault();
     setCurrentUser({
-      name: loginEmail ? loginEmail.split('@')[0] : "Farhan Ahmed",
-      email: loginEmail || "member3.transactions@rewear.org",
+      name: loginEmail ? loginEmail.split('@')[0] : "Mehedi Hasan",
+      email: loginEmail || "mhemon3131@gmail.com",
       role: userRole,
       swapCredits: 120,
       universityBadge: "Verified Student (.edu)",
@@ -162,13 +218,47 @@ export default function App() {
     setUserRole(roleType);
     setLoginEmail(email);
     setCurrentUser({
-      name: roleType === 'student' ? 'Nafis Iqbal (Member 3)' : 'Zerin Tasnim (Seller)',
+      name: roleType === 'student' ? 'Mehedi Hasan (Member 3)' : 'Zerin Tasnim (Seller)',
       email: email,
       role: roleType,
       swapCredits: 150,
       universityBadge: 'Verified Student ID',
     });
     setIsAuthOpen(false);
+  };
+
+  // Launch Checkout Modal (Feature 11)
+  const handleOpenCheckout = (item) => {
+    setCheckoutItem(item);
+    setIsCheckoutOpen(true);
+  };
+
+  // Launch SmartSwap Studio Modal (Feature 12)
+  const handleOpenSwapStudio = (item) => {
+    setSwapTargetItem(item || listings[0]);
+    setIsSwapStudioOpen(true);
+  };
+
+  // Callback when an order is completed
+  const handleOrderSuccess = (newOrder) => {
+    setOrdersList(prev => [newOrder, ...prev]);
+  };
+
+  // Callback to cancel an order
+  const handleCancelOrder = (orderId) => {
+    setOrdersList(prev =>
+      prev.map(ord => {
+        if (ord.id === orderId) {
+          return {
+            ...ord,
+            orderStatus: 'CANCELLED',
+            paymentStatus: 'REFUNDED'
+          };
+        }
+        return ord;
+      })
+    );
+    alert(`Order ${orderId} has been cancelled and refunded.`);
   };
 
   return (
@@ -196,7 +286,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
           
           {/* Logo & Identity */}
-          <div className="flex items-center gap-3 cursor-pointer group">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <div className="w-11 h-11 rounded-xl bg-[#542747] flex items-center justify-center text-[#FFF5EB] shadow-md group-hover:bg-[#A94F2C] transition-colors">
               <Leaf className="w-6 h-6 text-[#E58B51]" />
             </div>
@@ -210,7 +300,7 @@ export default function App() {
           </div>
 
           {/* Search Bar with AI Visual Input Trigger */}
-          <div className="flex-1 max-w-xl hidden lg:block">
+          <div className="flex-1 max-w-lg hidden lg:block">
             <div className="relative flex items-center">
               <Search className="w-4 h-4 text-[#A94F2C] absolute left-3.5 pointer-events-none" />
               <input
@@ -231,10 +321,39 @@ export default function App() {
           </div>
 
           {/* Action Navigation */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* FEATURE 12 TRIGGER: SmartSwap Studio Button */}
+            <button
+              onClick={() => handleOpenSwapStudio(listings[0])}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#542747] hover:bg-[#A94F2C] text-white text-xs font-bold transition-all shadow-xs"
+              title="Open Member 3 AI Swap Matchmaker & Escrow"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-[#E58B51]" />
+              <span className="hidden sm:inline">AI SmartSwap Studio</span>
+              <span className="bg-[#A94F2C] text-white text-[9px] px-1.5 py-0.2 rounded-full font-extrabold uppercase">Escrow</span>
+            </button>
+
+            {/* FEATURE 11 TRIGGER: My Orders & Receipts */}
+            <button
+              onClick={() => setIsOrderHistoryOpen(true)}
+              className="relative p-2.5 rounded-xl border border-[#E9C7B7] bg-white hover:bg-[#E9C7B7]/30 text-[#542747] transition-colors flex items-center gap-1.5"
+              title="View Member 3 Unified Checkout Orders & Stripe Receipts"
+            >
+              <Receipt className="w-4 h-4 text-[#A94F2C]" />
+              <span className="text-xs font-bold hidden md:inline">Orders</span>
+              {ordersList.length > 0 && (
+                <span className="w-4 h-4 rounded-full bg-[#A94F2C] text-white text-[10px] font-bold flex items-center justify-center">
+                  {ordersList.length}
+                </span>
+              )}
+            </button>
+
             {/* Wishlist Pill */}
-            <button className="relative p-2.5 rounded-full hover:bg-[#E9C7B7]/40 text-[#542747] transition-colors">
+            <button
+              onClick={() => alert(`Your Wishlist contains ${wishlistCount} saved garments.`)}
+              className="relative p-2.5 rounded-full hover:bg-[#E9C7B7]/40 text-[#542747] transition-colors"
+            >
               <Heart className="w-5 h-5 text-[#542747]" />
               {wishlistCount > 0 && (
                 <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#A94F2C] text-white text-[10px] font-bold flex items-center justify-center">
@@ -245,9 +364,9 @@ export default function App() {
 
             {/* Swap Credits Wallet Badge */}
             {currentUser && (
-              <div className="hidden sm:flex items-center gap-2 bg-[#E9C7B7]/40 border border-[#E9C7B7] px-3 py-1.5 rounded-full">
+              <div className="hidden xl:flex items-center gap-2 bg-[#E9C7B7]/40 border border-[#E9C7B7] px-3 py-1.5 rounded-full">
                 <RefreshCw className="w-3.5 h-3.5 text-[#A94F2C]" />
-                <span className="text-xs font-bold text-[#542747]">{currentUser.swapCredits} Swap Credits</span>
+                <span className="text-xs font-bold text-[#542747]">{currentUser.swapCredits} Credits</span>
               </div>
             )}
 
@@ -256,37 +375,25 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <div className="text-right hidden sm:block">
                   <div className="text-xs font-bold text-[#542747]">{currentUser.name}</div>
-                  <div className="text-[10px] text-[#A94F2C] font-semibold">{currentUser.role === 'student' ? 'Member 3 (Swaps & Rentals)' : 'Seller'}</div>
+                  <div className="text-[10px] text-[#A94F2C] font-semibold">Member 3 (Active)</div>
                 </div>
                 <button
                   onClick={() => setCurrentUser(null)}
                   title="Sign Out"
-                  className="p-2.5 rounded-full bg-[#542747] text-[#FFF5EB] hover:bg-[#A94F2C] transition-colors"
+                  className="p-2 rounded-full bg-[#542747] text-[#FFF5EB] hover:bg-[#A94F2C] transition-colors"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#542747] hover:bg-[#A94F2C] text-[#FFF5EB] font-semibold text-sm transition-all shadow-sm hover:shadow"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#542747] hover:bg-[#A94F2C] text-[#FFF5EB] font-semibold text-xs sm:text-sm transition-all shadow-sm"
               >
-                <LogIn className="w-4 h-4" />
-                <span>Sign In / Join</span>
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
               </button>
             )}
-
-            {/* List an item CTA */}
-            <button
-              onClick={() => {
-                if (!currentUser) setIsAuthOpen(true);
-                else alert("Opening Member 1's AI Listing Copilot workflow!");
-              }}
-              className="hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[#A94F2C] hover:bg-[#8c3e20] text-white font-semibold text-sm transition-all shadow-sm"
-            >
-              <Sparkles className="w-4 h-4 text-[#FFF5EB]" />
-              <span>List Clothing</span>
-            </button>
           </div>
         </div>
 
@@ -314,7 +421,7 @@ export default function App() {
                 }`}
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
-                <span>Buy & Sell Pre-Owned</span>
+                <span>Buy & Sell (Stripe)</span>
               </button>
               <button
                 onClick={() => setActiveMode('swap')}
@@ -342,11 +449,11 @@ export default function App() {
 
             <div className="hidden lg:flex items-center gap-3 text-xs text-[#A94F2C] font-semibold">
               <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Condition Transparency Disclosed
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Stripe API Integrated
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#542747]" /> Anti-MERN MVC Compliant
+                <ShieldCheck className="w-3.5 h-3.5 text-[#542747]" /> Member 3 Escrow Active
               </span>
             </div>
           </div>
@@ -372,28 +479,26 @@ export default function App() {
               </h1>
 
               <p className="text-base sm:text-lg text-[#38302F]/80 max-w-xl font-normal leading-relaxed">
-                ReWear brings university students and mindful shoppers together to <strong>buy</strong>, <strong>sell</strong>, <strong>swap with credits</strong>, or <strong>rent</strong> verified pre-owned garments. Zero fast-fashion guilt, maximum style.
+                ReWear brings university students and mindful shoppers together to <strong>buy with Stripe</strong>, <strong>swap with credits</strong>, or <strong>rent</strong> verified pre-owned garments. Zero fast-fashion guilt, maximum style.
               </p>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
-                  onClick={() => setActiveMode('swap')}
+                  onClick={() => handleOpenSwapStudio(listings[0])}
                   className="px-6 py-3.5 rounded-xl bg-[#A94F2C] hover:bg-[#8c3e20] text-white font-bold text-sm sm:text-base flex items-center gap-2 shadow-md hover:shadow-lg transition-all"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span>Start Swapping (Swap-Credits)</span>
+                  <span>Launch AI SmartSwap Studio</span>
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </button>
 
                 <button
-                  onClick={() => {
-                    const el = document.getElementById('listings-grid');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="px-6 py-3.5 rounded-xl bg-[#542747] hover:bg-[#6e345e] text-[#FFF5EB] font-bold text-sm sm:text-base transition-all"
+                  onClick={() => handleOpenCheckout(listings[0])}
+                  className="px-6 py-3.5 rounded-xl bg-[#542747] hover:bg-[#6e345e] text-[#FFF5EB] font-bold text-sm sm:text-base flex items-center gap-2 transition-all shadow-md"
                 >
-                  Explore Collection
+                  <CreditCard className="w-4 h-4 text-[#E58B51]" />
+                  <span>Test Stripe Checkout</span>
                 </button>
               </div>
 
@@ -401,7 +506,7 @@ export default function App() {
               <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#E9C7B7]/80 max-w-lg">
                 <div>
                   <div className="text-2xl font-black text-[#542747]">100%</div>
-                  <div className="text-xs text-[#38302F]/70 font-medium">Condition Disclosed</div>
+                  <div className="text-xs text-[#38302F]/70 font-medium">Stripe Verified</div>
                 </div>
                 <div>
                   <div className="text-2xl font-black text-[#A94F2C]">2,700L</div>
@@ -409,7 +514,7 @@ export default function App() {
                 </div>
                 <div>
                   <div className="text-2xl font-black text-[#E58B51]">0৳</div>
-                  <div className="text-xs text-[#38302F]/70 font-medium">Swap Matchmaking</div>
+                  <div className="text-xs text-[#38302F]/70 font-medium">Escrow Fee</div>
                 </div>
               </div>
             </div>
@@ -461,19 +566,16 @@ export default function App() {
                   </div>
 
                   <button 
-                    onClick={() => {
-                      if (!currentUser) setIsAuthOpen(true);
-                      else alert("Swap proposal sent! Item temporarily locked in escrow.");
-                    }}
-                    className="w-full py-2.5 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-1.5"
+                    onClick={() => handleOpenSwapStudio(listings[0])}
+                    className="w-full py-2.5 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                   >
-                    <span>Propose Instant Swap (Escrow Protected)</span>
+                    <span>Launch AI SmartSwap Studio (Escrow Protected)</span>
                   </button>
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-[11px] text-[#38302F]/60">
                   <span>🛡️ ReWear Escrow Protection</span>
-                  <span>📦 Courier & Campus Pickup</span>
+                  <span>💳 Stripe Card & Swap Credits</span>
                 </div>
               </div>
             </div>
@@ -482,7 +584,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 4. FOUR AI INNOVATIONS SHOWCASE (TEAM MEMBERS ALLOCATION) */}
+      {/* 4. FOUR AI INNOVATIONS SHOWCASE */}
       <section className="py-12 bg-white border-b border-[#E9C7B7]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-8">
@@ -493,7 +595,7 @@ export default function App() {
               4 Specialized AI Engines For 4 Team Members
             </h2>
             <p className="text-xs sm:text-sm text-[#38302F]/70 mt-1">
-              Each member owns 5 core features and 1 integrated AI system communicating with our modular backend.
+              Each member owns 5 core features and 1 integrated AI system. Member 3 features are now fully functional.
             </p>
           </div>
 
@@ -537,7 +639,7 @@ export default function App() {
                   : 'border-[#E9C7B7] bg-[#FFF5EB] hover:bg-[#E9C7B7]/30 text-[#38302F]'
               }`}
             >
-              <div className="text-[10px] font-bold uppercase opacity-80">Member 3 (You)</div>
+              <div className="text-[10px] font-bold uppercase opacity-80">Member 3 (You) • LIVE</div>
               <div className="font-bold text-sm flex items-center gap-1.5 mt-0.5">
                 <RefreshCw className="w-4 h-4 text-[#E58B51]" />
                 <span>AI Swap Matchmaker</span>
@@ -562,26 +664,55 @@ export default function App() {
 
           {/* AI Tab Interactive Content Panel */}
           <div className="bg-[#FFF5EB] rounded-2xl p-6 border border-[#E9C7B7] shadow-inner">
+            {activeAiTab === 'swap' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div className="space-y-3">
+                  <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 3 • Swapping & Transactions</span>
+                  <h3 className="text-xl font-bold text-[#542747]">AI Swap Matchmaker & Escrow State Machine</h3>
+                  <p className="text-xs sm:text-sm text-[#38302F]/80">
+                    Matches compatible closets between students based on wishlist preferences, garment sizes, and credit valuations. Generates negotiation rationale and protects items in escrow so no double-swapping occurs!
+                  </p>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#542747]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Calculates 4-factor compatibility score + manages swap escrow state</span>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => handleOpenSwapStudio(listings[0])}
+                      className="px-4 py-2 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#E58B51]" />
+                      <span>Open Member 3 Matchmaker Studio</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
+                  <div className="text-xs font-bold text-[#542747] mb-2">Member 3 Engine Architecture:</div>
+                  <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
+                    <div><strong>States:</strong> PROPOSED &gt; ACCEPTED &gt; ESCROW_LOCKED &gt; COMPLETED</div>
+                    <div><strong>Stripe Gateway:</strong> Card Tokenization & Payment Intent Verified</div>
+                    <div><strong>Cancellation:</strong> 2-Hour Grace Period & Instant Refund Flow</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeAiTab === 'copilot' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div className="space-y-3">
                   <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 1 • Seller Intelligence</span>
                   <h3 className="text-xl font-bold text-[#542747]">Snap & Sell AI Copilot</h3>
                   <p className="text-xs sm:text-sm text-[#38302F]/80">
-                    Sellers simply snap a photograph. The AI automatically classifies the garment type, detects visible fabric patterns and color palettes, suggests an SEO-friendly title, and prepares a draft listing ready for defect disclosure review.
+                    Sellers simply snap a photograph. The AI automatically classifies the garment type, detects visible fabric patterns, and drafts listings ready for review.
                   </p>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#542747]">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Auto-generates tags: #Vintage #Corduroy #Unisex</span>
-                  </div>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
                   <div className="text-xs font-bold text-[#542747] mb-2">Simulated Copilot Output:</div>
                   <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
                     <div><strong>Title:</strong> Vintage Oversized Corduroy Jacket</div>
                     <div><strong>Category:</strong> Outerwear &gt; Jackets</div>
-                    <div><strong>Estimated Value:</strong> ৳1,600 – ৳2,000</div>
-                    <div><strong>Resale Confidence:</strong> 94%</div>
+                    <div><strong>Resale Range:</strong> ৳1,600 – ৳2,000</div>
                   </div>
                 </div>
               </div>
@@ -593,43 +724,14 @@ export default function App() {
                   <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 2 • Buyer Discovery</span>
                   <h3 className="text-xl font-bold text-[#542747]">Semantic & Natural Language Style Finder</h3>
                   <p className="text-xs sm:text-sm text-[#38302F]/80">
-                    Buyers don't need to know exact tags. Enter queries like <em>"cozy knitwear for winter exams under 1500 taka"</em>. The vector search matches intent, combines database budget filters, and displays available listings.
+                    Buyers query in plain English. Vector search matches style intent and applies budget filters.
                   </p>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#542747]">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Vector embeddings + PostgreSQL relational query filters</span>
-                  </div>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
                   <div className="text-xs font-bold text-[#542747] mb-2">Natural Language Query Processing:</div>
                   <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
                     <div><strong>Input:</strong> "black oversized vintage jacket under 2k"</div>
                     <div><strong>Extracted:</strong> [Color: Black, Fit: Oversized, MaxPrice: 2000]</div>
-                    <div><strong>Database Match:</strong> 8 listings found & verified active</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeAiTab === 'swap' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                <div className="space-y-3">
-                  <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 3 • Swapping & Transactions</span>
-                  <h3 className="text-xl font-bold text-[#542747]">AI Swap Matchmaker & Escrow State Machine</h3>
-                  <p className="text-xs sm:text-sm text-[#38302F]/80">
-                    Matches compatible closets between students based on wishlist preferences, garment sizes, and credit valuations. Generates negotiation rationale and protects items in escrow so no double-swapping occurs!
-                  </p>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#542747]">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Calculates compatibility score + manages swap state machine</span>
-                  </div>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
-                  <div className="text-xs font-bold text-[#542747] mb-2">Member 3 Engine Architecture:</div>
-                  <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
-                    <div><strong>States:</strong> PENDING &gt; ACCEPTED &gt; ESCROW_LOCKED &gt; COMPLETED</div>
-                    <div><strong>Rental Rules:</strong> Overlapping calendar date reservation prevention</div>
-                    <div><strong>Late Returns:</strong> Automatic deposit deduction fee calculator</div>
                   </div>
                 </div>
               </div>
@@ -641,19 +743,14 @@ export default function App() {
                   <span className="text-xs font-bold text-[#A94F2C] uppercase tracking-wider">Member 4 • Trust & Sustainability</span>
                   <h3 className="text-xl font-bold text-[#542747]">AI Circular Fashion & Garment Care Coach</h3>
                   <p className="text-xs sm:text-sm text-[#38302F]/80">
-                    Ask how to remove coffee stains, patch frayed denim seams, or upcycle old college tees. Provides actionable DIY garment repair instructions with specific safety caveats for delicate fibers like silk and wool.
+                    Ask how to remove coffee stains, patch frayed denim seams, or upcycle old college tees with fabric safety cautions.
                   </p>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#542747]">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Includes real-time Sustainability Impact equations</span>
-                  </div>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-[#E9C7B7] shadow-sm">
                   <div className="text-xs font-bold text-[#542747] mb-2">Care Coach Assistant Example:</div>
                   <div className="bg-[#FFF5EB] p-3 rounded-lg text-xs space-y-1 font-mono text-[#38302F]">
-                    <div><strong>Prompt:</strong> "How do I remove ink stains from a cotton shirt?"</div>
+                    <div><strong>Prompt:</strong> "How do I remove ink stains from cotton?"</div>
                     <div><strong>AI Advice:</strong> "Dab with isopropyl alcohol; do not rub vigorously."</div>
-                    <div><strong>Circularity Impact:</strong> Rescues ৳2,200 garment from landfill!</div>
                   </div>
                 </div>
               </div>
@@ -760,16 +857,26 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Card Action */}
-                <button
-                  onClick={() => {
-                    if (!currentUser) setIsAuthOpen(true);
-                    else alert(`Proceeding to checkout/swap for: ${item.title}`);
-                  }}
-                  className="w-full py-2 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
-                >
-                  <span>Select / Propose Swap</span>
-                </button>
+                {/* Member 3 Actions: Unified Checkout (Stripe) & AI SmartSwap */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    onClick={() => handleOpenCheckout(item)}
+                    className="py-2 px-2 bg-[#542747] hover:bg-[#A94F2C] text-white rounded-lg font-bold text-[11px] transition-colors flex items-center justify-center gap-1 shadow-2xs"
+                    title="Pay with Stripe Card or Swap Credits"
+                  >
+                    <CreditCard className="w-3 h-3 text-[#E58B51]" />
+                    <span>Buy (Stripe)</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleOpenSwapStudio(item)}
+                    className="py-2 px-2 bg-white hover:bg-[#E9C7B7]/40 text-[#542747] border border-[#E9C7B7] rounded-lg font-bold text-[11px] transition-colors flex items-center justify-center gap-1"
+                    title="Trade with AI Compatibility Matchmaker"
+                  >
+                    <RefreshCw className="w-3 h-3 text-[#A94F2C]" />
+                    <span>AI SmartSwap</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -870,15 +977,6 @@ export default function App() {
               <p className="text-xs text-[#E9C7B7]/70 leading-relaxed">
                 Circular fashion platform built for university campuses. Buy, sell, swap with credit points, and rent conscious clothing.
               </p>
-              <div className="flex items-center gap-2 text-xs text-[#E58B51] font-bold">
-                <span>Color Palette:</span>
-                <span className="w-3 h-3 rounded-full bg-[#542747]" title="Deep Plum #542747"></span>
-                <span className="w-3 h-3 rounded-full bg-[#A94F2C]" title="Burnt Orange #A94F2C"></span>
-                <span className="w-3 h-3 rounded-full bg-[#E58B51]" title="Soft Tangerine #E58B51"></span>
-                <span className="w-3 h-3 rounded-full bg-[#E9C7B7]" title="Peach Blush #E9C7B7"></span>
-                <span className="w-3 h-3 rounded-full bg-[#FFF5EB]" title="Warm Cream #FFF5EB"></span>
-                <span className="w-3 h-3 rounded-full bg-[#38302F]" title="Espresso #38302F"></span>
-              </div>
             </div>
 
             {/* Member Roles & Allocation */}
@@ -893,13 +991,13 @@ export default function App() {
             </div>
 
             <div className="space-y-2">
-              <div className="text-xs font-bold text-[#E58B51] uppercase tracking-wider">Member 3 & 4</div>
+              <div className="text-xs font-bold text-[#E58B51] uppercase tracking-wider">Member 3 (You) • READY</div>
               <ul className="text-xs text-[#E9C7B7]/80 space-y-1">
-                <li>• <strong>Member 3 (You):</strong> Unified Checkout & Payments</li>
-                <li>• <strong>Member 3 (You):</strong> AI Swap Matchmaker & Escrow</li>
-                <li>• <strong>Member 3 (You):</strong> Rental Booking & Deposit Rules</li>
-                <li>• Member 4: Trust Center & Verified Reviews</li>
-                <li>• Member 4: AI Fashion Coach & Impact Calculator</li>
+                <li>• <strong>Feature 11:</strong> Unified Checkout & Stripe Payments (LIVE)</li>
+                <li>• <strong>Feature 12:</strong> AI Swap Matchmaker & Escrow (LIVE)</li>
+                <li>• Feature 13: Rental Booking & Deposit Rules</li>
+                <li>• Feature 14: Delivery Courier Tracking</li>
+                <li>• Feature 15: Transaction Protection & Disputes</li>
               </ul>
             </div>
 
@@ -909,21 +1007,43 @@ export default function App() {
               <p className="text-xs text-[#E9C7B7]/80 leading-relaxed">
                 Designed for CSE470 Software Engineering. Adheres strictly to MVC framework requirements, 20 distinct features across 4 team members, and avoids prohibited MERN configurations.
               </p>
-              <div className="pt-1 text-[11px] text-[#A94F2C] font-semibold">
-                Repository Architecture: Git Monorepo (frontend + backend + docs)
-              </div>
             </div>
 
           </div>
 
           <div className="pt-6 border-t border-[#E9C7B7]/10 flex flex-col sm:flex-row items-center justify-between text-xs text-[#E9C7B7]/50 gap-2">
             <div>© 2026 ReWear Team • CSE470 Software Engineering Project</div>
-            <div>React.js • NestJS MVC • PostgreSQL • Tailwind CSS</div>
+            <div>React.js • NestJS MVC • PostgreSQL • Stripe API • Tailwind CSS</div>
           </div>
         </div>
       </footer>
 
-      {/* 8. AUTHENTICATION & LOGIN MODAL */}
+      {/* 8. FEATURE 11: CHECKOUT & STRIPE PAYMENT MODAL */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        item={checkoutItem}
+        currentUser={currentUser}
+        onOrderSuccess={handleOrderSuccess}
+      />
+
+      {/* 9. FEATURE 12: AI SMARTSWAP STUDIO & ESCROW MODAL */}
+      <SmartSwapStudioModal
+        isOpen={isSwapStudioOpen}
+        onClose={() => setIsSwapStudioOpen(false)}
+        targetItem={swapTargetItem}
+        currentUser={currentUser}
+      />
+
+      {/* 10. ORDER HISTORY & STRIPE RECEIPTS MODAL */}
+      <OrderHistoryModal
+        isOpen={isOrderHistoryOpen}
+        onClose={() => setIsOrderHistoryOpen(false)}
+        orders={ordersList}
+        onCancelOrder={handleCancelOrder}
+      />
+
+      {/* 11. AUTHENTICATION & LOGIN MODAL */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
           <div className="bg-[#FFF5EB] w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border-2 border-[#E9C7B7] relative">
@@ -958,10 +1078,10 @@ export default function App() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => handleDemoLogin('student', 'member3.swap@bracu.ac.bd')}
+                  onClick={() => handleDemoLogin('student', 'mhemon3131@gmail.com')}
                   className="py-1.5 px-2 bg-[#FFF5EB] hover:bg-[#E9C7B7]/50 border border-[#E9C7B7] rounded-lg text-xs font-bold text-[#542747] text-left transition-colors"
                 >
-                  👤 Member 3 (Swapper)
+                  👤 Mehedi (Member 3)
                 </button>
                 <button
                   type="button"
@@ -1068,4 +1188,3 @@ export default function App() {
     </div>
   );
 }
-
