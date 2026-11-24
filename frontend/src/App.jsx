@@ -39,9 +39,16 @@ import SellerStudioModal from './components/SellerStudioModal';
 import CheckoutModal from './components/CheckoutModal';
 import SmartSwapStudioModal from './components/SmartSwapStudioModal';
 import OrderHistoryModal from './components/OrderHistoryModal';
+// Member 2: Advanced Multi-Filter Search
+import MarketplaceFilterPanel from './components/MarketplaceFilterPanel';
+import { useMarketplaceSearch } from './hooks/useMarketplaceSearch';
+// Member 2: Outfit Builder & Digital Lookbook
+import OutfitBuilderModal from './components/OutfitBuilderModal';
 
 export default function App() {
   const [isMember4Open, setIsMember4Open] = useState(false);
+  // Member 2: Outfit Builder modal (seed = garment card that opened it, if any)
+  const [outfitBuilder, setOutfitBuilder] = useState({ open: false, seed: null });
   // Navigation / Filter State
   const [activeMode, setActiveMode] = useState('all'); // 'all', 'buy', 'swap', 'rent'
   const [searchQuery, setSearchQuery] = useState('');
@@ -258,11 +265,14 @@ export default function App() {
     setListings(prev => prev.filter(item => item.id !== listingId));
   };
 
-  // Filter listings based on active mode
-  const filteredListings = listings.filter(item => {
-    if (activeMode === 'all') return true;
-    return item.modes && item.modes.includes(activeMode);
-  });
+  // Member 2: backend multi-filter search (keyword + mode reuse the existing header/mode state)
+  const marketplaceSearch = useMarketplaceSearch({ listings, keyword: searchQuery, mode: activeMode });
+  const filteredListings = marketplaceSearch.items;
+  const clearMarketplaceFilters = () => {
+    marketplaceSearch.resetFilters();
+    setSearchQuery('');
+    setActiveMode('all');
+  };
 
   // Handle Mock Login
   const handleAuthSubmit = (e) => {
@@ -336,6 +346,20 @@ export default function App() {
         </button>
       </div>
       {isMember4Open && <Member4Hub onClose={() => setIsMember4Open(false)} />}
+
+      {/* Member 2: Outfit Builder & Lookbook launcher */}
+      <div className="fixed bottom-5 left-5 z-[60]">
+        <button type="button" onClick={() => setOutfitBuilder({ open: true, seed: null })}
+          className="rounded-full bg-[#A94F2C] px-5 py-3 font-bold text-white shadow-xl hover:bg-[#542747]">
+          👗 Outfit Builder
+        </button>
+      </div>
+      <OutfitBuilderModal
+        isOpen={outfitBuilder.open}
+        seedItem={outfitBuilder.seed}
+        frontendListings={listings}
+        onClose={() => setOutfitBuilder({ open: false, seed: null })}
+      />
       {/* 1. TOP ANNOUNCEMENT / COMMUNITY BAR */}
       <div className="bg-[#542747] text-[#FFF5EB] px-4 py-2 text-xs md:text-sm font-medium">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -868,6 +892,16 @@ export default function App() {
           </div>
         </div>
 
+        {/* Member 2: Advanced Multi-Filter Search */}
+        <MarketplaceFilterPanel
+          search={marketplaceSearch}
+          keyword={searchQuery}
+          onKeywordChange={setSearchQuery}
+          mode={activeMode}
+          onModeChange={setActiveMode}
+          onClearAll={clearMarketplaceFilters}
+        />
+
         {/* Listings Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredListings.map((item) => (
@@ -896,6 +930,11 @@ export default function App() {
                   {(item.status === 'SOLD' || item.status === 'RENTED') && (
                     <span className="bg-purple-800 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs">
                       {item.status}
+                    </span>
+                  )}
+                  {marketplaceSearch.provenance.get(item.id) === 'local-only' && (
+                    <span className="bg-white/95 text-amber-800 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md" title="Exists only in this browser session; not confirmed on the server">
+                      Local only
                     </span>
                   )}
                 </div>
@@ -996,6 +1035,16 @@ export default function App() {
                     </button>
                   </div>
                 )}
+
+                {/* Member 2: add this garment to an outfit / lookbook */}
+                <button
+                  type="button"
+                  onClick={() => setOutfitBuilder({ open: true, seed: item })}
+                  className="w-full py-1.5 bg-[#FFF5EB] hover:bg-[#E9C7B7]/50 text-[#542747] border border-[#E9C7B7] rounded-lg font-bold text-[11px] transition-colors flex items-center justify-center gap-1"
+                >
+                  <Layers className="w-3 h-3 text-[#A94F2C]" />
+                  <span>Add to Outfit</span>
+                </button>
               </div>
             </div>
           ))}
