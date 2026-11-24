@@ -1,3 +1,4 @@
+import Member4Hub from './components/Member4Hub';
 import React, { useState } from 'react';
 import {
   ShoppingBag,
@@ -40,6 +41,7 @@ import SmartSwapStudioModal from './components/SmartSwapStudioModal';
 import OrderHistoryModal from './components/OrderHistoryModal';
 
 export default function App() {
+  const [isMember4Open, setIsMember4Open] = useState(false);
   // Navigation / Filter State
   const [activeMode, setActiveMode] = useState('all'); // 'all', 'buy', 'swap', 'rent'
   const [searchQuery, setSearchQuery] = useState('');
@@ -325,6 +327,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FFF5EB] text-[#38302F] flex flex-col font-sans selection:bg-[#E9C7B7] selection:text-[#542747]">
       
+      
+      {/* Member 4 only: Circular Living Hub */}
+      <div className="fixed bottom-5 right-5 z-[60]">
+        <button type="button" onClick={() => setIsMember4Open(true)}
+          className="rounded-full bg-[#542747] px-5 py-3 font-bold text-white shadow-xl hover:bg-[#A94F2C]">
+          🌿 Circular Living Hub
+        </button>
+      </div>
+      {isMember4Open && <Member4Hub onClose={() => setIsMember4Open(false)} />}
       {/* 1. TOP ANNOUNCEMENT / COMMUNITY BAR */}
       <div className="bg-[#542747] text-[#FFF5EB] px-4 py-2 text-xs md:text-sm font-medium">
         <div className="max-w-7xl mx-auto flex items-center justify-between">

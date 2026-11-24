@@ -1,5 +1,5 @@
 // ReWear: Transactions Service — connects Checkout & SmartSwap frontend to NestJS backend
-const API_BASE = 'http://localhost:5000/api/v1/transactions';
+const API_BASE = 'http://localhost:5001/api/v1/transactions';
 
 // ==============================
 // CHECKOUT & STRIPE PAYMENT
