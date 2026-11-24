@@ -1,4 +1,5 @@
-﻿import { Module } from '@nestjs/common';
+import { Member4Module } from './modules/member4/member4.module';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -10,6 +11,7 @@ import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
+    Member4Module,
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     UsersModule,

@@ -1,5 +1,5 @@
 // ReWear: Listing Service connecting React Frontend to NestJS Backend API
-const API_BASE = 'http://localhost:5000/api/v1/listings';
+const API_BASE = 'http://localhost:5001/api/v1/listings';
 
 export async function requestAiCopilotDraft(imageHint, declaredBrand, sellerNote) {
   try {
